@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from enum import Enum
 
 from sqlmodel import Field
@@ -25,5 +25,5 @@ class Store_Timezone(BaseModel, table=True):
 class Menu_Hours(BaseModel, table=True):
     store_id: str = Field(index=True)
     day: int = Field(ge=0, le=6)
-    start_time_local: datetime
-    end_time_local: datetime
+    start_time_local: time
+    end_time_local: time

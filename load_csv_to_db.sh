@@ -1,0 +1,1 @@
+python3 -m app.scripts.csv_to_db
