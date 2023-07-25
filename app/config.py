@@ -3,10 +3,10 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    domain: str = os.getenv("domain")
-    db_uri: str = os.getenv("db_uri", "postgresql://pramod:pksingh@localhost:5432/edzeup")
-    db_echo: bool = os.getenv("db_echo", True)
-    db_connect_args: dict = {}
+    db_file_name: str = "database.sqlite3"
+    db_uri: str = os.getenv("db_uri", f"sqlite:///./app/database/{db_file_name}")
+    db_echo: bool = False
+    db_connect_args: dict = {"check_same_thread": False}
 
     class Config:
         env_file = ".env"
