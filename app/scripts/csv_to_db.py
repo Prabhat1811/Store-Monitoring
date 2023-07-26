@@ -2,10 +2,17 @@
 Python script for fetching data from csv and putting it in our database
 """
 
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 from sqlmodel import Session, SQLModel, create_engine
+from tqdm import tqdm
 
 from app.config import settings
-from app.models.report import Menu_Hours
+from app.models.report import Menu_Hours, Store_Status, Store_Timezone
+
+FILEPATH = "./app/data_csv"
+BATCH_SIZE = 10000
 
 engine = create_engine(
     settings.db_uri,
@@ -23,72 +30,94 @@ def get_session():
         yield session
 
 
-FILEPATH = "./app/data_csv"
-
-
 create_db_and_tables(engine)
 
 
-def load_menu_hours(filename, batch_size=1000):
+class Store_Status_Schema(BaseModel):
+    store_id: str = Field(index=True)
+    status: str
+    timestamp_utc: datetime
+
+
+def load_to_db(filename, schema, fields, batch_size=BATCH_SIZE):
     """
     Used batch inserts because of speed
 
     Here is the data I observed when inserting around 80000 records,
-    1. Insert one by one:
+    1. Insert one by one,
         a. Status - Incomplete
         b. Time taken - 30 seconds
         c. Records inserted - 3004
-    2. Insert in batch, size = 1000:
+    2. Insert in batch, size = 1000,
         a. Status - Complete
         b. Time taken - 11 seconds
         c. Records inserted - 86198
-    3. Insert in batch, size = 5000:
+    3. Insert in batch, size = 5000,
         a. Status - Complete
         b. Time taken - 8.5 seconds
         c. Records inserted - 86198
-    4. Insert in batch, size = 10000:
+    4. Insert in batch, size = 10000,
         a. Status - Complete
         b. Time taken - 7.5 seconds
         c. Records inserted - 86198
 
     I decided to go with batch size of 5000
     """
+    print(f"Started with: {filename}")
+
+    fields_dict = {}
 
     with open(f"{FILEPATH}/{filename}", "r") as csv_file:
         batch = []
-        for i, data in enumerate(csv_file):
+        for i, data in enumerate(tqdm(csv_file)):
             if not i:
+                if len(fields) != len(data.strip().split(",")):
+                    print("Fields do not match, aborting...")
+                    return
                 continue
 
-            store_id, day, start_time_local, end_time_local = data.strip().split(",")
-            db_menu_hours = Menu_Hours(
-                store_id=store_id,
-                day=day,
-                start_time_local=start_time_local,
-                end_time_local=end_time_local,
-            )
-            batch.append(db_menu_hours)
+            processed_data = data.strip().split(",")
+
+            for field, value in zip(fields, processed_data):
+                # Check for timestampm_utc field and strip ` UTC` from it
+                if field == "timestamp_utc":
+                    fields_dict[field] = value.rstrip(" UTC")
+                else:
+                    fields_dict[field] = value
+
+            db_data = schema(**fields_dict)
+            db_data.process_for_insert()
+            batch.append(db_data)
 
             if len(batch) >= batch_size:
-                with Session(engine) as session:
-                    session.bulk_save_objects(batch)
-                    session.commit()
-                    batch = []
+                try:
+                    with Session(engine) as session:
+                        session.bulk_save_objects(batch)
+                        session.commit()
+                        batch = []
+                except:
+                    print("Error inserting. Check fields")
+                    return
 
         # Insert any remaining records
         if batch:
-            with Session(engine) as session:
-                session.bulk_save_objects(batch)
-                session.commit()
+            try:
+                with Session(engine) as session:
+                    session.bulk_save_objects(batch)
+                    session.commit()
+            except:
+                print("Error inserting. Check fields")
+                return
 
-
-def load_store_status(filename, batch_size=1000):
-    pass
-
-
-def load_store_timezones(filename, batch_size=1000):
-    pass
+    print("Finished")
 
 
 if __name__ == "__main__":
-    load_menu_hours("menu_hours.csv", batch_size=5000)
+
+    menu_hours_fields = ["store_id", "day", "start_time_local", "end_time_local"]
+    store_status_fields = ["store_id", "status", "timestamp_utc"]
+    store_timezones = ["store_id", "timezone"]
+
+    load_to_db("menu_hours.csv", Menu_Hours, menu_hours_fields, batch_size=5000)
+    load_to_db("store_status.csv", Store_Status, store_status_fields, batch_size=10000)
+    load_to_db("store_timezones.csv", Store_Timezone, store_timezones, batch_size=5000)

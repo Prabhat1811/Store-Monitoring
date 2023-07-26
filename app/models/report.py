@@ -16,10 +16,16 @@ class Store_Status(BaseModel, table=True):
     status: Status
     timestamp_utc: datetime
 
+    def process_for_insert(self):
+        self.status = self.status.value
+
 
 class Store_Timezone(BaseModel, table=True):
     store_id: str = Field(index=True)
     timezone: str
+
+    def process_for_insert(self):
+        pass
 
 
 class Menu_Hours(BaseModel, table=True):
@@ -27,3 +33,6 @@ class Menu_Hours(BaseModel, table=True):
     day: int = Field(ge=0, le=6)
     start_time_local: time
     end_time_local: time
+
+    def process_for_insert(self):
+        pass
