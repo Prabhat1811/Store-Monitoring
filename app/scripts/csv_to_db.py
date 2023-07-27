@@ -3,11 +3,11 @@ Python script for fetching data from csv and putting it in our database
 """
 
 from datetime import datetime
+from time import time
 
 from pydantic import BaseModel, Field
 from sqlmodel import Session, SQLModel, create_engine
 from tqdm import tqdm
-from time import time
 
 from app.config import settings
 from app.models.report import Menu_Hours, Store_Status, Store_Timezone

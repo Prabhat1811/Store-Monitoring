@@ -11,3 +11,5 @@
    2. `conda activate loop`
    3. `pip install -r requirements.txt`
    4. `uvicorn app.main:app --reload`
+
+### Step by Step process for approaching the problem:

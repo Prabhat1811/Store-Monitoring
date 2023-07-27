@@ -1,20 +1,26 @@
 from fastapi import APIRouter, BackgroundTasks, status
 from fastapi.responses import FileResponse, JSONResponse
+from sqlmodel import Session
 
-from app.routers.utils import Report
+from app.db import ActiveSession
+from app.utils.lock import Lock
+from app.utils.report import Report
 
 router = APIRouter(tags=["reports"])
 
 report = Report()
+lock = Lock()
 
 
 @router.get("/trigger_report", response_class=JSONResponse)
-async def trigger_report(background_tasks: BackgroundTasks):
+async def trigger_report(
+    background_tasks: BackgroundTasks, session: Session = ActiveSession
+):
 
-    if report.is_locked():
+    if lock.is_locked():
         return JSONResponse(status_code=status.HTTP_200_OK, content="in_process")
 
-    background_tasks.add_task(report.generate_report)
+    background_tasks.add_task(report.generate_report, lock, session)
 
     return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content="started")
 
