@@ -13,7 +13,8 @@ class Report:
     def generate_report(self, lock: Lock, session: Session):
         lock.acquire()
 
-        get_store_ids(session)
+        for store_id in get_store_ids(session):
+            break
 
         lock.release()
 

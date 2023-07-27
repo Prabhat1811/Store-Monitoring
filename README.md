@@ -12,4 +12,22 @@
    3. `pip install -r requirements.txt`
    4. `uvicorn app.main:app --reload`
 
-### Step by Step process for approaching the problem:
+### Observations
+
+1.
+
+### Logic
+
+1.
+
+### Questions
+
+```
+<Ques.> How would I access files created in the past?
+<Ans.> Right now, You cant.
+```
+
+```
+<Ques.> What would happen when this is hosted somewhere on the web and multiple users call `/trigger_report`?
+<Ans.>
+```

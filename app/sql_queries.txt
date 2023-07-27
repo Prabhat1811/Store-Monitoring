@@ -1,16 +1,52 @@
+-- Observations made
+--
+-- 1. Some stores do not have daily timings, like store_id=1004734158580760410
+-- 2. Some stores do not open everyday
+-- 3. Some stores open multiple times a day, e.g. store opens at 9am and closes by 12pm, and then opens at 5pm till 11pm
+-- 4. Every store opens at some point (This might change when new data comes)
+-- 5. Maximum times a store was opened in a day was __
+-- 6. Maximum times an individual store opened in a week was 21
+
+
+--
+-- SQL Statements from here
+--
+
+-- 
 SELECT COUNT(DISTINCT store_id)
 FROM store_timezone
 
+
+-- Get daily timings
 SELECT st.store_id, timezone, day, start_time_local, end_time_local
 FROM store_timezone as st
 INNER JOIN menu_hours as mh
 WHERE st.store_id == mh.store_id
-AND st.store_id == "5415949628544298339"
+AND st.store_id == "1048472060871258012"
 ORDER By day ASC
 
+
+-- Get hourly logs 
 SELECT st.store_id, timezone, status, timestamp_utc
 FROM store_timezone as st
 INNER JOIN store_status as ss
 WHERE st.store_id == ss.store_id
-AND st.store_id == "5415949628544298339"
+AND st.store_id == "1048472060871258012"
 ORDER BY timestamp_utc ASC
+
+
+-- Group and count logs by day
+SELECT DATE(timestamp_utc) as date, COUNT(DATE(timestamp_utc)) as logs_,st.store_id, timezone, status
+FROM store_timezone as st
+INNER JOIN store_status as ss
+WHERE st.store_id == ss.store_id
+AND st.store_id == "1048472060871258012"
+GROUP BY DATE(timestamp_utc)
+ORDER BY DATE(timestamp_utc) ASC
+
+
+-- Count the listed timings
+SELECT store_id, COUNT(store_id)
+FROM menu_hours as mh
+GROUP BY store_id
+HAVING COUNT(store_id)>14

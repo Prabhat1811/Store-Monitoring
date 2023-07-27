@@ -9,7 +9,7 @@ from app.utils.report import Report
 router = APIRouter(tags=["reports"])
 
 report = Report()
-lock = Lock()
+file_lock = Lock()
 
 
 @router.get("/trigger_report", response_class=JSONResponse)
@@ -17,20 +17,27 @@ async def trigger_report(
     background_tasks: BackgroundTasks, session: Session = ActiveSession
 ):
 
-    if lock.is_locked():
+    if file_lock.is_applied():
         return JSONResponse(status_code=status.HTTP_200_OK, content="in_process")
 
-    background_tasks.add_task(report.generate_report, lock, session)
+    background_tasks.add_task(report.generate_report, file_lock, session)
 
     return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content="started")
 
 
 @router.get("/get_report", response_class=FileResponse)
 async def get_report():
+
+    if file_lock.is_applied():
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content="Running",
+        )
+
     if not report.exists():
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content="file not found, run /trigger_report first",
+            content="Report doesn't exist",
         )
 
     return FileResponse(
