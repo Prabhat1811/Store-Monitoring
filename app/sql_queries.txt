@@ -1,0 +1,16 @@
+SELECT COUNT(DISTINCT store_id)
+FROM store_timezone
+
+SELECT st.store_id, timezone, day, start_time_local, end_time_local
+FROM store_timezone as st
+INNER JOIN menu_hours as mh
+WHERE st.store_id == mh.store_id
+AND st.store_id == "5415949628544298339"
+ORDER By day ASC
+
+SELECT st.store_id, timezone, status, timestamp_utc
+FROM store_timezone as st
+INNER JOIN store_status as ss
+WHERE st.store_id == ss.store_id
+AND st.store_id == "5415949628544298339"
+ORDER BY timestamp_utc ASC

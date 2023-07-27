@@ -11,7 +11,7 @@ report = Report()
 @router.get("/trigger_report", response_class=JSONResponse)
 async def trigger_report(background_tasks: BackgroundTasks):
 
-    if report.status():
+    if report.is_locked():
         return JSONResponse(status_code=status.HTTP_200_OK, content="in_process")
 
     background_tasks.add_task(report.generate_report)

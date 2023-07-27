@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from sqlmodel import Session, SQLModel, create_engine
 from tqdm import tqdm
+from time import time
 
 from app.config import settings
 from app.models.report import Menu_Hours, Store_Status, Store_Timezone
@@ -63,8 +64,8 @@ def load_to_db(filename, schema, fields, batch_size=BATCH_SIZE):
 
     I decided to go with batch size of 5000 and 10000
 
-    It is taking close to 4 minutes 30 seconds to upload around 2 million records from csv to SQLite database.
-    I don't think this is optimal and can be brought down to under 1 minute.
+    It is taking close to 5 minutes to upload around 2 million records from csv to SQLite database.
+    I don't think this is optimal and can be brought down to less than half.
     """
     print(f"Started with: {filename}")
 
@@ -115,8 +116,7 @@ def load_to_db(filename, schema, fields, batch_size=BATCH_SIZE):
     print("Finished")
 
 
-if __name__ == "__main__":
-
+def main():
     menu_hours_fields = ["store_id", "day", "start_time_local", "end_time_local"]
     store_status_fields = ["store_id", "status", "timestamp_utc"]
     store_timezones = ["store_id", "timezone"]
@@ -124,3 +124,9 @@ if __name__ == "__main__":
     load_to_db("menu_hours.csv", Menu_Hours, menu_hours_fields, batch_size=5000)
     load_to_db("store_status.csv", Store_Status, store_status_fields, batch_size=10000)
     load_to_db("store_timezones.csv", Store_Timezone, store_timezones, batch_size=5000)
+
+
+if __name__ == "__main__":
+    start_time = time()
+    main()
+    print(f"Time taken: {round(time() - start_time, 2)}s\n")
