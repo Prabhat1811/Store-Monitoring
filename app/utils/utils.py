@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
+import pytz
 from dateutil import tz
 
 
@@ -19,19 +20,40 @@ def utc_to_local(local_timezone, utc_time):
     print("Local Time:", local)
 
 
-def local_to_utc(local_timezone, local_time):
-    to_zone = tz.gettz("UTC")
-    from_zone = tz.gettz(local_timezone)
+def local_to_utc(
+    local_timezone,
+    local_time,
+):
+    to_zone = pytz.UTC
+    from_zone = pytz.timezone(local_timezone)
 
-    local_time = local_time.split(".")[0]
+    current_date = date.today()
 
-    local = datetime.strptime(local_time, "%Y-%m-%d %H:%M:%S")
+    local_time_obj = datetime.strptime(local_time, "%H:%M:%S").time()
 
-    local = local.replace(tzinfo=from_zone)
-    utc = local.astimezone(to_zone)
+    local_datetime = datetime.combine(current_date, local_time_obj)
 
-    print("Local Time:", local)
-    print("UTC Time:", utc)
+    local_datetime = from_zone.localize(local_datetime)
+
+    utc_datetime = local_datetime.astimezone(to_zone)
+
+    utc_time = utc_datetime.time()
+
+    return utc_time
+
+
+def time_difference(time2, time1, common_date):
+    # Convert the datetime.time objects to datetime objects with a common date
+    time1 = datetime.strptime(time1, "%H:%M:%S").time()
+    time2 = datetime.strptime(time2, "%H:%M:%S").time()
+
+    datetime1 = datetime.combine(common_date, time1)
+    datetime2 = datetime.combine(common_date, time2)
+
+    # Calculate the time difference
+    time_difference = (datetime2 - datetime1).total_seconds() / 3600
+
+    return time_difference
 
 
 def get_day_of_week_from_utc(utc_time):

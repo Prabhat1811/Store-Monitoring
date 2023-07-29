@@ -1,5 +1,10 @@
 """
-Python script for fetching data from csv and putting it in our database
+Python script for fetching data from csv and putting it in our database.
+
+Right now, It fetches the files locally.
+For real-world scenario we can create a separate space where new files are uploaded regularly.
+We can then automate this script to run on a daily basis to check if any new files are uploaded.
+If yes, Then download, process and put them in the db.
 """
 
 from datetime import datetime
