@@ -22,7 +22,7 @@ def get_store_timings(store_id: str, session: Session):
     return store_timings
 
 
-def get_store_status(store_id, session: Session):
+def get_store_status_logs(store_id, session: Session):
 
     query = (
         select(Store_Timezone, Store_Status)

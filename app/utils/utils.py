@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from json import dumps
 
 import pytz
 from dateutil import tz
@@ -69,9 +70,20 @@ def get_day_of_week_from_utc(utc_time):
         "sunday": 6,
     }
 
-    utc_time = utc_time.split(".")[0]
+    utc_time = str(utc_time).split(".")[0]
 
     utc = datetime.strptime(utc_time, "%Y-%m-%d %H:%M:%S")
     day_of_week = utc.strftime("%A")
 
     return day_mapping[day_of_week.lower()]
+
+
+def pretty_print(data, indent=2):
+    # For testing
+
+    if type(data) == dict:
+        print(dumps(data, indent))
+    elif type(data) == list:
+        print(data, sep="\n")
+    else:
+        print(data)

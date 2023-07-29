@@ -12,7 +12,12 @@
 -- SQL Statements from here
 --
 
--- 
+-- Get store_timezone
+SELECT *
+FROM store_timezone
+
+
+-- Check if there is any duplicate entry in store_timezone
 SELECT COUNT(DISTINCT store_id)
 FROM store_timezone
 
