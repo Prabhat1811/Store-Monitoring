@@ -1,8 +1,125 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from sqlalchemy.engine.row import Row
 
 from app.utils.utils import *
+
+
+def get_start_end_day_index(db_store_status_logs, day):
+    """Find the starting, ending log of a specific day"""
+
+    start = end = -1
+
+    for i in range(len(db_store_status_logs)):
+        if db_store_status_logs[i].Store_Status.timestamp_utc.day == day:
+            start = i
+            break
+
+    for i in range(start + 1, len(db_store_status_logs)):
+
+        if db_store_status_logs[i].Store_Status.timestamp_utc.day != day:
+            end = i
+            break
+
+    if end == -1:
+        end = len(db_store_status_logs) - 1
+
+    if start != 0:
+        start += 1
+
+    return start, end + 1
+
+
+def get_start_day_index(db_store_status_logs, day):
+    pass
+
+    for i in range(len(db_store_status_logs)):
+        if db_store_status_logs[i].Store_Status.timestamp_utc.day == day:
+            break
+
+    return i
+
+
+def calculate_total_uptime(
+    schedule: List[List[Any]],
+    logs,
+    start_index,
+    end_index,
+    local_timezone,
+    status,
+    date_today,
+):
+    """
+    Total uptime of a day
+
+    Approach:
+
+    """
+    i = start_index
+    j = 0
+    uptime = 0
+
+    # print(schedule)
+    # print(logs)
+    # return
+
+    # print(logs[i].Store_Status)
+    # return
+
+    while (
+        i < end_index
+        and j < len(schedule)
+        and utc_to_local(logs[i].Store_Status.timestamp_utc.time(), local_timezone)
+        >= schedule[j][1]
+    ):
+        if status == "active":
+            uptime += time_difference(schedule[j][1], schedule[j][0], date_today)
+        j += 1
+
+    while i < end_index and j < len(schedule):
+        logged_till = schedule[j][0]
+
+        while (
+            i < end_index
+            and utc_to_local(logs[i].Store_Status.timestamp_utc.time(), local_timezone)
+            <= schedule[j][1]
+        ):
+            if status == "active":
+                uptime += time_difference(
+                    utc_to_local(
+                        logs[i].Store_Status.timestamp_utc.time(), local_timezone
+                    ),
+                    logged_till,
+                    date_today,
+                )
+
+            logged_till = utc_to_local(
+                logs[i].Store_Status.timestamp_utc.time(), local_timezone
+            )
+            status = logs[i].Store_Status.status
+            i += 1
+
+        if status == "active":
+            uptime += time_difference(schedule[j][1], logged_till, date_today)
+
+        j += 1
+
+    while status == "active" and j < len(schedule):
+        uptime += time_difference(schedule[j][1], schedule[j][0], date_today)
+        j += 1
+
+    return round(uptime, 2)
+
+
+def sum_time_intervals(buisness_hours: List[str], date_today):
+    """Get opening hours in a day"""
+
+    opening_hours = 0
+
+    for schedule in buisness_hours:
+        opening_hours += time_difference(schedule[1], schedule[0], date_today)
+
+    return opening_hours
 
 
 class Store:
@@ -18,23 +135,11 @@ class Store:
         self.local_timezone = local_timezone
         self.date_today = date_today
 
-        self.buisness_hours = self.calculate_buisness_hours(db_store_timings)
-        self.opening_hours_week = self.calculate_store_opening_hours_week(
-            self.buisness_hours
-        )
+        self.buisness_hours = self.buisness_time_interval(db_store_timings)
 
         self.db_store_status_logs = db_store_status_logs
 
-        self.uptime_last_hour = 0
-        self.downtime_last_hour = 0
-
-        self.uptime_last_day = 0
-        self._downtime_last_day = 0
-
-        self.uptime_last_week = 0
-        self.downtime_last_week = 0
-
-    def calculate_buisness_hours(self, store_timings: List[Row]):
+    def buisness_time_interval(self, store_timings: List[Row]) -> Dict[int, Any]:
 
         buisness_hours = {
             0: [],  # Monday
@@ -48,8 +153,9 @@ class Store:
 
         for row in store_timings:
             day = row.Menu_Hours.day
-            start_time = str(row.Menu_Hours.start_time_local)
-            end_time = str(row.Menu_Hours.end_time_local)
+
+            start_time = str_to_time(row.Menu_Hours.start_time_local)
+            end_time = str_to_time(row.Menu_Hours.end_time_local)
 
             buisness_hours[day].append(
                 [
@@ -60,77 +166,64 @@ class Store:
 
         return buisness_hours
 
-    def calculate_store_opening_hours_week(self, buisness_hours: Dict[int, List]):
-        """Total time (Rounded) a store is supposed to be open for in a week"""
-
-        opening_hours = 0
-
-        for day in buisness_hours:
-            for schedule in buisness_hours[day]:
-                opening_hours += time_difference(
-                    schedule[1], schedule[0], self.date_today
-                )
-
-        return opening_hours
-
-    # def get_last_day(self):
-    #     """Get the number of the last day for which the status was logged"""
-
-    #     for status in range(len(self.db_store_status_logs)-1, 0, -1):
-    #         pass
-
     def uptime_downtime_last_hour(self):
-        """Uptime and downtime for the last recorded hour.\n
-        1. Fetch all logs that have data regarding last hour
-        2.
-        """
-        uptime = downtime = 0
+        pass
 
-    def uptime_downtime_day(self, day):
-        """Uptime and downtime for a day.\n
-        What I already have?
-        1. A list containing hourly status of the store.
-        2. A dictionary containing opening hours of the store.
-
-        Approach?
-        1. Find exactly where does the fist status lies for the particular day in the status list.
-        2. Calculate what day was the last status recorded.
-        3. I now have the last day statuses and the store timings for that day.
-        4. Iterate through each status and calculate if it lies within the store open timings and if the status shows active or inactive.
-        5. This method can also be used to get the total uptime and downtime for a whole week.
-        """
-
-        uptime = downtime = 0
-
-        buisness_hours_on_day = self.buisness_hours[day]
-
-        for i in self.db_store_status_logs:
-            pretty_print(i)
-        pretty_print(buisness_hours_on_day)
-        print(day)
-
-        # print(uptime, downtime)
-
-    def uptime_downtime_last_week(self):
-        uptime = downtime = 0
-
-    def get_calculated_data(self):
-        # self.uptime_downtime_last_hour()
-
-        # Get last recorded day from logs
-        # What if db_store_status_logs is empty?
-        day = get_day_of_week_from_utc(
+    def uptime_downtime_last_day(self):
+        start_day_date = get_start_day_index(
+            self.db_store_status_logs,
+            self.db_store_status_logs[-1].Store_Status.timestamp_utc.day,
+        )
+        end_day_date = len(self.db_store_status_logs)
+        last_logged_day = get_day_of_week_from_utc(
             self.db_store_status_logs[-1].Store_Status.timestamp_utc
         )
-        self.uptime_downtime_day(day)
-        # self.uptime_downtime_last_week()
+
+        # Get previous log status, If previous log doesn't exists get current day status
+        previous_log_status = self.db_store_status_logs[
+            max(0, start_day_date - 1)
+        ].Store_Status.status
+
+        uptime = calculate_total_uptime(
+            self.buisness_hours[last_logged_day],
+            self.db_store_status_logs,
+            start_day_date,
+            end_day_date,
+            self.local_timezone,
+            previous_log_status,
+            self.date_today,
+        )
+
+        total_supposed_uptime = round(
+            sum_time_intervals(self.buisness_hours[last_logged_day], self.date_today)
+        )
+
+        downtime = round(total_supposed_uptime - uptime, 2)
+
+        print(uptime, downtime)
+
+        return uptime, downtime
+
+    def uptime_downtime_last_week(self):
+        pass
+
+    def get_calculated_data(self):
+
+        # print(self.db_store_status_logs[-1].Store_Status.timestamp_utc.day)
+        # return
+
+        # uptime_last_hour, downtime_last_hour = self.uptime_downtime_last_hour()
+        uptime_last_day, downtime_last_day = self.uptime_downtime_last_day()
+        # uptime_last_week, downtime_last_week = self.uptime_downtime_last_week()
+
+        return
 
         return [
             self.store_id,
-            self.uptime_last_hour,
-            self.uptime_last_day,
-            self.uptime_last_week,
-            self.downtime_last_hour,
-            self._downtime_last_day,
-            self.downtime_last_week,
+            uptime_last_hour,
+            uptime_last_day,
+            uptime_last_week,
+            downtime_last_hour,
+            downtime_last_day,
+            downtime_last_week,
         ]
