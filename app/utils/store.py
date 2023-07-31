@@ -52,7 +52,18 @@ def calculate_total_uptime(
     """
     Total uptime of a day
 
+    Time Complexity: O(n)
+
     Approach:
+    Turns out, It was easier than what I had initially thought.
+
+    I have divided this function into 3 parts/while loops.
+
+    `1st Part`
+
+    `2nd Part`
+
+    `3rd Part`
 
     """
     i = start_index
@@ -207,25 +218,95 @@ class Store:
             uptime = "NO LOGS"
             downtime = "NO LOGS"
 
-        # print(uptime, downtime)
-
         return uptime, downtime
 
     def uptime_downtime_last_week(self):
-        pass
+
+        # print("Inside Week")
+
+        if self.db_store_status_logs:
+            uptime = 0
+
+            start_index = 0
+            start_day_date = self.db_store_status_logs[0].Store_Status.timestamp_utc.day
+
+            # Iterate through the logs keeping track of start time and endtime
+            for i, log in enumerate(self.db_store_status_logs):
+
+                if i >= len(self.db_store_status_logs) - 1:
+                    previous_log_status = self.db_store_status_logs[
+                        len(self.db_store_status_logs) - 1
+                    ].Store_Status.status
+
+                    day = get_day_of_week_from_utc(
+                        self.db_store_status_logs[
+                            max(0, i - 1)
+                        ].Store_Status.timestamp_utc
+                    )
+
+                    uptime += calculate_total_uptime(
+                        self.buisness_hours[day],
+                        self.db_store_status_logs,
+                        start_index,
+                        i,
+                        self.local_timezone,
+                        previous_log_status,
+                        self.date_today,
+                    )
+
+                if log.Store_Status.timestamp_utc.day != start_day_date:
+
+                    previous_log_status = self.db_store_status_logs[
+                        max(0, i - 1)
+                    ].Store_Status.status
+
+                    day = get_day_of_week_from_utc(
+                        self.db_store_status_logs[
+                            max(0, i - 1)
+                        ].Store_Status.timestamp_utc
+                    )
+
+                    uptime += calculate_total_uptime(
+                        self.buisness_hours[day],
+                        self.db_store_status_logs,
+                        start_index,
+                        i,
+                        self.local_timezone,
+                        previous_log_status,
+                        self.date_today,
+                    )
+
+                    start_day_date = self.db_store_status_logs[
+                        i
+                    ].Store_Status.timestamp_utc.day
+
+            # Calculate total time for which the store is supposed to be open
+            total_supposed_uptime = 0
+            for i in self.buisness_hours:
+                total_supposed_uptime += round(
+                    sum_time_intervals(self.buisness_hours[i], self.date_today)
+                )
+
+            downtime = round(total_supposed_uptime - uptime, 2)
+            uptime = round(uptime, 2)
+        else:
+            uptime = "NO LOGS"
+            downtime = "NO LOGS"
+
+        return uptime, downtime
 
     def calculate_data(self):
 
         # uptime_last_hour, downtime_last_hour = self.uptime_downtime_last_hour()
         uptime_last_day, downtime_last_day = self.uptime_downtime_last_day()
-        # uptime_last_week, downtime_last_week = self.uptime_downtime_last_week()
+        uptime_last_week, downtime_last_week = self.uptime_downtime_last_week()
 
         return [
             self.store_id,
             # uptime_last_hour,
             uptime_last_day,
-            # uptime_last_week,
+            uptime_last_week,
             # downtime_last_hour,
             downtime_last_day,
-            # downtime_last_week,
+            downtime_last_week,
         ]

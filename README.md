@@ -14,7 +14,9 @@
 
 ## Observations
 
-1.
+1. Time to load >=2 million records from csv to db ≈ 5 minutes
+2. Time to generate csv from the data ≈ 6 minutes
+3. These times are way too much and can be brought down to less than half of what they are
 
 ## Logic
 
@@ -41,7 +43,7 @@ We also don't know status of the store when the state comes/goes to unknown i.e.
 ## Questions
 
 ```
-<Ques.> How would I access files created in the past?
+<Ques.> How would you access files created in the past?
 <Ans.> Right now, You can't.
 ```
 

@@ -21,12 +21,12 @@ class Report:
             "store_id",
             # "uptime_last_hour(in minutes)",
             "uptime_last_day(in hours)",
-            # "update_last_week(in hours)",
+            "update_last_week(in hours)",
             # "downtime_last_hour(in minutes)",
             "downtime_last_day(in hours)",
-            # "downtime_last_week(in hours)",
+            "downtime_last_week(in hours)",
         ]
-        self.batch_size = 5000
+        self.batch_size = 2000
 
     def generate_report(self, lock: Lock, session: Session):
         lock.acquire()
@@ -61,6 +61,10 @@ class Report:
             )
 
             batch.append(store.calculate_data())
+
+            del store
+
+            # return
 
             if len(batch) >= self.batch_size:
                 try:
