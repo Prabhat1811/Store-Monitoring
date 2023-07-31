@@ -4,9 +4,9 @@ from fastapi.responses import JSONResponse
 from app.db import create_db_and_tables, engine
 from app.routers import reports
 
-description = """Assignment for Loop - Store Monitor. 🚀"""
+description = """Store Monitor 🚀"""
 app = FastAPI(
-    title="Loop assignment",
+    title="Store Monitor",
     description=description,
 )
 

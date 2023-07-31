@@ -8,7 +8,6 @@ from app.utils.report import Report
 
 router = APIRouter(tags=["reports"])
 
-report = Report()
 file_lock = Lock()
 
 
@@ -20,6 +19,7 @@ async def trigger_report(
     if file_lock.is_applied():
         return JSONResponse(status_code=status.HTTP_200_OK, content="in_process")
 
+    report = Report()
     background_tasks.add_task(report.generate_report, file_lock, session)
 
     return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content="started")
@@ -33,6 +33,8 @@ async def get_report():
             status_code=status.HTTP_200_OK,
             content="Running",
         )
+
+    report = Report()
 
     if not report.exists():
         return JSONResponse(

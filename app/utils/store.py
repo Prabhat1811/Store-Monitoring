@@ -170,60 +170,62 @@ class Store:
         pass
 
     def uptime_downtime_last_day(self):
-        start_day_date = get_start_day_index(
-            self.db_store_status_logs,
-            self.db_store_status_logs[-1].Store_Status.timestamp_utc.day,
-        )
-        end_day_date = len(self.db_store_status_logs)
-        last_logged_day = get_day_of_week_from_utc(
-            self.db_store_status_logs[-1].Store_Status.timestamp_utc
-        )
 
-        # Get previous log status, If previous log doesn't exists get current day status
-        previous_log_status = self.db_store_status_logs[
-            max(0, start_day_date - 1)
-        ].Store_Status.status
+        if self.db_store_status_logs:
+            start_day_date = get_start_day_index(
+                self.db_store_status_logs,
+                self.db_store_status_logs[-1].Store_Status.timestamp_utc.day,
+            )
+            end_day_date = len(self.db_store_status_logs)
+            last_logged_day = get_day_of_week_from_utc(
+                self.db_store_status_logs[-1].Store_Status.timestamp_utc
+            )
 
-        uptime = calculate_total_uptime(
-            self.buisness_hours[last_logged_day],
-            self.db_store_status_logs,
-            start_day_date,
-            end_day_date,
-            self.local_timezone,
-            previous_log_status,
-            self.date_today,
-        )
+            # Get previous log status, If previous log doesn't exists get current day status
+            previous_log_status = self.db_store_status_logs[
+                max(0, start_day_date - 1)
+            ].Store_Status.status
 
-        total_supposed_uptime = round(
-            sum_time_intervals(self.buisness_hours[last_logged_day], self.date_today)
-        )
+            uptime = calculate_total_uptime(
+                self.buisness_hours[last_logged_day],
+                self.db_store_status_logs,
+                start_day_date,
+                end_day_date,
+                self.local_timezone,
+                previous_log_status,
+                self.date_today,
+            )
 
-        downtime = round(total_supposed_uptime - uptime, 2)
+            total_supposed_uptime = round(
+                sum_time_intervals(
+                    self.buisness_hours[last_logged_day], self.date_today
+                )
+            )
 
-        print(uptime, downtime)
+            downtime = round(total_supposed_uptime - uptime, 2)
+        else:
+            uptime = "NO LOGS"
+            downtime = "NO LOGS"
+
+        # print(uptime, downtime)
 
         return uptime, downtime
 
     def uptime_downtime_last_week(self):
         pass
 
-    def get_calculated_data(self):
-
-        # print(self.db_store_status_logs[-1].Store_Status.timestamp_utc.day)
-        # return
+    def calculate_data(self):
 
         # uptime_last_hour, downtime_last_hour = self.uptime_downtime_last_hour()
         uptime_last_day, downtime_last_day = self.uptime_downtime_last_day()
         # uptime_last_week, downtime_last_week = self.uptime_downtime_last_week()
 
-        return
-
         return [
             self.store_id,
-            uptime_last_hour,
+            # uptime_last_hour,
             uptime_last_day,
-            uptime_last_week,
-            downtime_last_hour,
+            # uptime_last_week,
+            # downtime_last_hour,
             downtime_last_day,
-            downtime_last_week,
+            # downtime_last_week,
         ]
