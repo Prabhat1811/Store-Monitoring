@@ -39,12 +39,6 @@ def get_session():
 create_db_and_tables(engine)
 
 
-class Store_Status_Schema(BaseModel):
-    store_id: str = Field(index=True)
-    status: str
-    timestamp_utc: datetime
-
-
 def load_to_db(filename, schema, fields, batch_size=BATCH_SIZE):
     """
     Used batch inserts because of speed
@@ -127,7 +121,7 @@ def main():
     store_timezones = ["store_id", "timezone"]
 
     load_to_db("menu_hours.csv", Menu_Hours, menu_hours_fields, batch_size=5000)
-    load_to_db("store_status.csv", Store_Status, store_status_fields, batch_size=10000)
+    load_to_db("store_status.csv", Store_Status, store_status_fields, batch_size=20000)
     load_to_db("store_timezones.csv", Store_Timezone, store_timezones, batch_size=5000)
 
 

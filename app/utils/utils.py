@@ -3,8 +3,6 @@ from json import dumps
 
 import pytz
 
-# from dateutil import tz
-
 
 def utc_to_local(utc_time_str: time, local_timezone: str) -> time:
     """
@@ -31,32 +29,7 @@ def utc_to_local(utc_time_str: time, local_timezone: str) -> time:
     return str_to_time(local_time)
 
 
-# def local_to_utc(
-#     local_timezone,
-#     local_time,
-# ):
-#     to_zone = pytz.UTC
-#     from_zone = pytz.timezone(local_timezone)
-
-#     current_date = date.today()
-
-#     local_time_obj = datetime.strptime(local_time, "%H:%M:%S").time()
-
-#     local_datetime = datetime.combine(current_date, local_time_obj)
-
-#     local_datetime = from_zone.localize(local_datetime)
-
-#     utc_datetime = local_datetime.astimezone(to_zone)
-
-#     utc_time = utc_datetime.time()
-
-#     return utc_time
-
-
 def time_difference(time1, time2, common_date):
-    # Convert the datetime.time objects to datetime objects with a common date
-    # time1 = datetime.strptime(time1, "%H:%M:%S").time()
-    # time2 = datetime.strptime(time2, "%H:%M:%S").time()
 
     datetime1 = datetime.combine(common_date, time1)
     datetime2 = datetime.combine(common_date, time2)
@@ -109,7 +82,3 @@ def str_to_time(time: str) -> time:
 
     return time.time()
 
-
-# def time_to_float(time_obj):
-#     time_delta = timedelta(hours=time_obj.hour, minutes=time_obj.minute, seconds=time_obj.second)
-#     return time_delta.total_seconds()/3600

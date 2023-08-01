@@ -5,31 +5,6 @@ from sqlalchemy.engine.row import Row
 from app.utils.utils import *
 
 
-def get_start_end_day_index(db_store_status_logs, day):
-    """Find the starting, ending log of a specific day"""
-
-    start = end = -1
-
-    for i in range(len(db_store_status_logs)):
-        if db_store_status_logs[i].Store_Status.timestamp_utc.day == day:
-            start = i
-            break
-
-    for i in range(start + 1, len(db_store_status_logs)):
-
-        if db_store_status_logs[i].Store_Status.timestamp_utc.day != day:
-            end = i
-            break
-
-    if end == -1:
-        end = len(db_store_status_logs) - 1
-
-    if start != 0:
-        start += 1
-
-    return start, end + 1
-
-
 def get_start_day_index(db_store_status_logs, day):
     pass
 
@@ -70,13 +45,6 @@ def calculate_total_uptime(
     j = 0
     uptime = 0
 
-    # print(schedule)
-    # print(logs)
-    # return
-
-    # print(logs[i].Store_Status)
-    # return
-
     while (
         i < end_index
         and j < len(schedule)
@@ -100,7 +68,7 @@ def calculate_total_uptime(
                     utc_to_local(
                         logs[i].Store_Status.timestamp_utc.time(), local_timezone
                     ),
-                    logged_till,
+                    max(logged_till, schedule[j][0]),
                     date_today,
                 )
 
@@ -178,7 +146,21 @@ class Store:
         return buisness_hours
 
     def uptime_downtime_last_hour(self):
-        pass
+
+        day = get_day_of_week_from_utc(
+            self.db_store_status_logs[
+                max(0, i - 1)
+            ].Store_Status.timestamp_utc
+        )
+
+        if self.db_store_status_logs:
+            for i in range(len(self.db_store_status_logs)-1, -1, -1):
+                if self.db_store_status_logs[-1].Store_Status.timestamp_utc
+        else:
+            uptime = "NO LOGS"
+            downtime = "NO LOGS"
+
+        return uptime, downtime
 
     def uptime_downtime_last_day(self):
 
@@ -221,8 +203,6 @@ class Store:
         return uptime, downtime
 
     def uptime_downtime_last_week(self):
-
-        # print("Inside Week")
 
         if self.db_store_status_logs:
             uptime = 0
@@ -297,16 +277,16 @@ class Store:
 
     def calculate_data(self):
 
-        # uptime_last_hour, downtime_last_hour = self.uptime_downtime_last_hour()
+        uptime_last_hour, downtime_last_hour = self.uptime_downtime_last_hour()
         uptime_last_day, downtime_last_day = self.uptime_downtime_last_day()
         uptime_last_week, downtime_last_week = self.uptime_downtime_last_week()
 
         return [
             self.store_id,
-            # uptime_last_hour,
+            uptime_last_hour,
             uptime_last_day,
             uptime_last_week,
-            # downtime_last_hour,
+            downtime_last_hour,
             downtime_last_day,
             downtime_last_week,
         ]

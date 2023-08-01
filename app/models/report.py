@@ -12,7 +12,11 @@ class Status(str, Enum):
 
 
 class Store_Status(BaseModel, table=True):
-    store_id: str = Field(index=True)
+    __tablename__ = "store_status"
+
+    store_id: str =  Field(
+        default=None, foreign_key="store_timezone.store_id", index=True
+    )
     status: Status
     timestamp_utc: datetime
 
@@ -21,6 +25,8 @@ class Store_Status(BaseModel, table=True):
 
 
 class Store_Timezone(BaseModel, table=True):
+    __tablename__ = "store_timezone"
+
     store_id: str = Field(index=True)
     timezone: str
 
@@ -29,7 +35,11 @@ class Store_Timezone(BaseModel, table=True):
 
 
 class Menu_Hours(BaseModel, table=True):
-    store_id: str = Field(index=True)
+    __tablename__ = "menu_hours"
+
+    store_id: str = Field(
+        default=None, foreign_key="store_timezone.store_id", index=True
+    )
     day: int = Field(ge=0, le=6)
     start_time_local: time
     end_time_local: time
