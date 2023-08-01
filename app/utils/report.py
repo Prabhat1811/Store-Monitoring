@@ -19,10 +19,10 @@ class Report:
         self.media_type = "text/csv"
         self.headers = [
             "store_id",
-            # "uptime_last_hour(in minutes)",
+            "uptime_last_hour(in minutes)",
             "uptime_last_day(in hours)",
             "update_last_week(in hours)",
-            # "downtime_last_hour(in minutes)",
+            "downtime_last_hour(in minutes)",
             "downtime_last_day(in hours)",
             "downtime_last_week(in hours)",
         ]

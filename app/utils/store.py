@@ -147,15 +147,19 @@ class Store:
 
     def uptime_downtime_last_hour(self):
 
-        day = get_day_of_week_from_utc(
+        if self.db_store_status_logs:
+            uptime = 0
+
+            day = get_day_of_week_from_utc(
             self.db_store_status_logs[
-                max(0, i - 1)
+                max(0, len(self.db_store_status_logs) - 1)
             ].Store_Status.timestamp_utc
         )
 
-        if self.db_store_status_logs:
-            for i in range(len(self.db_store_status_logs)-1, -1, -1):
-                if self.db_store_status_logs[-1].Store_Status.timestamp_utc
+            # for i in range(len(self.db_store_status_logs)-1, -1, -1):
+            #     if self.db_store_status_logs[-1].Store_Status.timestamp_utc
+            
+            downtime = 0
         else:
             uptime = "NO LOGS"
             downtime = "NO LOGS"
